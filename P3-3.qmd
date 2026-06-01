@@ -124,5 +124,6 @@ What do these results tell you about your model?
 ### Task D
 
 ```{r}
-mean_employment_fit %>% features(.innov, box_pierce, lag=24)
+augment(mean_employment_fit) %>% 
+  features(.innov, box_pierce, lag=10)
 ```
