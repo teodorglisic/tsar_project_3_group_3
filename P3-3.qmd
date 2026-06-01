@@ -1,0 +1,128 @@
+---
+title: "TSAR Project Assignment Part 3 - Group 3"
+subtitle: "Times Series Forecasting"
+## title-block-banner: true
+author:
+  - name: Arpad Broglie
+    email: arpad.broglie@students.fhnw.ch
+    corresponding: true
+  - name: Teodor Glisic
+    email: teodor.glisic@students.fhnw.ch
+    corresponding: true
+date: 06/04/2026
+date-format: "YYYY"
+format: 
+  html
+editor: visual
+execute: 
+  warning: false
+---
+
+## **Preliminaries**
+
+```{r}
+# Install needed libraries to use this report
+if (!require(dplyr)) install.packages("dplyr")
+if (!require(tidyr)) install.packages("tidyr")
+if (!require(ggplot2)) install.packages("ggplot2")
+if (!require(fpp3)) install.packages("fpp3")
+
+#Load needed libraries
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(fpp3)
+
+
+# Read already filtered time series (tsibble) 
+# with Series ID CEU1000000001 (Mining and Logging)
+mySeries <- readRDS("us_employment_filtered.rds")
+```
+
+## Overview of tsibble
+
+```{r}
+head(mySeries)
+str(mySeries)
+summary(mySeries)
+```
+
+## Step 1: Extracting the Training Set
+
+```{r}
+# Extracting number of rows for training set with 80/20 split
+overall_count <- (nrow(mySeries))
+training_row_count <- floor((nrow(mySeries) * 0.8))
+train <- mySeries %>% slice(1:training_row_count)
+```
+
+## Step 2: Train 1st Benchmark Model
+
+```{r}
+# Mean method used
+mean_employment_fit <- train %>%
+  model(
+  Mean = MEAN(Employed)
+)
+
+# View first impression of the fitted values
+augment(mean_employment_fit)
+```
+
+## Step 3: Evaluate the Model Fit of 1st Benchmark Model
+
+### Task A
+
+```{r}
+augment(mean_employment_fit) %>% 
+  autoplot(.fitted, colour="blue", linetype="dashed") +
+  autolayer(train, Employed) +
+  labs(y= "US Employment", title="Fitted and true values for monthly US employment rates (Mean method)")
+```
+
+#### Answering questions to 1st Benchmark Model
+
+Are the fitted values close to the actual values?
+
+Are they systematically too high or too low?
+
+If yes, where does it come from? (Consider how your benchmark model works!)
+
+### Task B
+
+```{r}
+augment(mean_employment_fit) %>%
+  ggplot(aes(x=Employed, y=.fitted)) + 
+  geom_point() + 
+  geom_abline(slope = 1, intercept = 0, linetype=2) + 
+  labs(title = "Actual vs. Fitted (Mean Model)", x="Actual", y="Fitted")
+           
+```
+
+#### Answering questions to 1st Benchmark Model
+
+Are the points close to the identity line?
+
+Are they systematically too high or too low?
+
+If yes, where does it come from? (Relate your answer to what you saw in the time plot.)
+
+### Task C
+
+```{r}
+mean_employment_fit %>% gg_tsresiduals()
+```
+
+#### Answering questions to 1st Benchmark Model
+
+Are the residuals auto-correlated? How do you decide that based on the plots?
+
+Do the residuals have zero mean? How do you decide that based on the plots?
+
+What do these results tell you about your model?
+
+### Task D
+
+```{r}
+mean_employment_fit %>% features(.innov, box_pierce, lag=24)
+```
