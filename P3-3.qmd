@@ -12,13 +12,24 @@ author:
 date: 06/04/2026
 date-format: "YYYY"
 format: 
-  html
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    theme: cosmo
+    self-contained: true
+  pdf:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    papersize: a4
+    syntax-highlighting: idiomatic
 editor: visual
 execute: 
   warning: false
 ---
 
-## **Preliminaries**
+# Preliminaries
 
 ```{r}
 # Install needed libraries to use this report
@@ -42,8 +53,13 @@ mySeries <- readRDS("us_employment_filtered.rds")
 ## Overview of tsibble
 
 ```{r}
+# Display the first few rows of the tsibble
 head(mySeries)
+
+# Inspect the structure of the tsibble (index, keys, column data types)
 str(mySeries)
+
+# Get a summary of the columns (distribution, range, missing values)
 summary(mySeries)
 ```
 
@@ -76,6 +92,7 @@ augment(mean_employment_fit)
 ### Task A
 
 ```{r}
+# Plot fitted values (predictions on training set) against actual values over time
 augment(mean_employment_fit) %>% 
   autoplot(.fitted, colour="blue", linetype="dashed") +
   autolayer(train, Employed) +
@@ -93,6 +110,7 @@ If yes, where does it come from? (Consider how your benchmark model works!)
 ### Task B
 
 ```{r}
+# Create a scatter plot of actual values vs. fitted values with an identity line (slope=1)
 augment(mean_employment_fit) %>%
   ggplot(aes(x=Employed, y=.fitted)) + 
   geom_point() + 
@@ -112,6 +130,7 @@ If yes, where does it come from? (Relate your answer to what you saw in the time
 ### Task C
 
 ```{r}
+# Generate diagnostic plots for the model residuals (time plot, ACF plot, histogram)
 mean_employment_fit %>% gg_tsresiduals()
 ```
 
@@ -126,8 +145,9 @@ What do these results tell you about your model?
 ### Task D
 
 ```{r}
+# Perform a Ljung-Box test for residual autocorrelation with 24 lags (2 * seasonal period)
 augment(mean_employment_fit) %>% 
-  features(.innov, box_pierce, lag=24)
+  features(.innov, ljung_box, lag=24)
 ```
 
 #### Answering questions to 1st Benchmark Model
@@ -143,6 +163,8 @@ residual_mean <- mean(
   na.rm = TRUE)
 residual_mean
 ```
+
+#### Answering questions to 1st Benchmark Model
 
 Does the result support your conclusions from (c)?
 
@@ -189,3 +211,150 @@ Are the residuals normally distributed?
 Does it make sense to include these prediction intervals in your model evaluation? Why/why not?
 
 # Model 2: Seasonal naive method with drift
+
+## Step 1: Extracting the Training Set
+
+```{r}
+# Extracting number of rows for training set with 80/20 split
+overall_count <- (nrow(mySeries))
+training_row_count <- floor((nrow(mySeries) * 0.8))
+train <- mySeries %>% slice(1:training_row_count)
+```
+
+## Step 2: Train 2nd Benchmark Model
+
+```{r}
+# Train the model with the seasonal naive drift method
+naive_drift_employment_fit <- train %>% model (
+    SNaive_Drift = SNAIVE(Employed ~ drift())
+)
+
+# View the trained data
+augment(naive_drift_employment_fit)
+```
+
+## Step 3: Evaluate the Model Fit of Your 2nd Benchmark Model
+
+### Task A
+
+```{r}
+# Plot actual training data against the model's fitted values over time
+augment(naive_drift_employment_fit) %>% 
+  autoplot(.fitted, colour="red", linetype="dashed") +
+  autolayer(train, Employed) +
+  labs(y= "US Employment", title="Fitted and true values for monthly US employment rates (Seasonal Naive with Drift method)")
+```
+
+#### Answering questions to 2nd Benchmark Model
+
+Are the fitted values close to the actual values?
+
+Are they systematically too high or too low?
+
+If yes, where does it come from? (Consider how your benchmark model works!)
+
+### Task B
+
+```{r}
+# Plot actual vs. fitted values to check deviation from the identity line (slope=1)
+augment(naive_drift_employment_fit) %>% 
+  ggplot(aes(x=Employed, y=.fitted)) + 
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, linetype=2) +
+  labs(title = "Actual vs. Fitted (Seasonal Naive with Drift Model)", x="Actual", y="Fitted")
+```
+
+#### Answering questions to 2nd Benchmark Model
+
+Are the points close to the identity line?
+
+Are they systematically too high or too low?
+
+If yes, where does it come from? (Relate your answer to what you saw in the time plot.)
+
+### Task C
+
+```{r}
+# View residual diagnostic plots (time plot, ACF plot, histogram) to assess model fit
+naive_drift_employment_fit %>% gg_tsresiduals()
+```
+
+#### Answering questions to 2nd Benchmark Model
+
+Are the residuals auto-correlated? How do you decide that based on the plots?
+
+Do the residuals have zero mean? How do you decide that based on the plots?
+
+What do these results tell you about your model?
+
+### Task D
+
+```{r}
+# Conduct a formal Ljung-Box test for autocorrelation in the residuals (lag = 2 * seasonal period)
+augment(naive_drift_employment_fit) %>% 
+  features(
+  .innov,
+  ljung_box,
+  lag = 24
+)
+```
+
+#### Answering questions to 2nd Benchmark Model
+
+Does the test result support your conclusions from (c)?
+
+How do you conclude that from the test result?
+
+```{r}
+# Calculate the mean of the residuals to check for forecast bias
+residual_mean_naive_drift <- mean(
+  augment(naive_drift_employment_fit)$.resid, 
+  na.rm = TRUE)
+residual_mean_naive_drift
+```
+
+#### Answering questions to 2nd Benchmark Model
+
+Does the result support your conclusions from (c)?
+
+## Step 4: Evaluate the Point Forecast Accuracy of your 2nd Benchmark Model
+
+```{r}
+# Generate forecasts for the test set period
+fc_naive_drift <- naive_drift_employment_fit %>% 
+  forecast(h=(overall_count - training_row_count))
+
+# Plot the forecast values with prediction intervals against the actual complete dataset
+fc_naive_drift %>% 
+  autoplot(mySeries) +
+  labs(title="US Employment in Mining and Logging - Actual vs. Forecast (Seasonal Naive with Drift Model)")
+
+# Calculate point forecast accuracy metrics (MAE, RMSE, MAPE, MASE) on the test set
+fc_naive_drift %>% accuracy(mySeries)
+```
+
+#### Answering questions to 2nd Benchmark Model
+
+Interpret the **RMSE** (Root Mean Squared Error) in max. 3 sentences:
+
+Interpret the **MAPE** (Mean Absolute Percentage Error) in max. 3 sentences:
+
+## Step 5: Evaluate the Point Forecast Uncertainty of Your 2nd Benchmark Model
+
+```{r}
+# Perform residual diagnostics to assess homoscedasticity and normality
+naive_drift_employment_fit %>% gg_tsresiduals()
+
+# Extract the upper and lower boundaries for 80% and 95% prediction intervals
+fc_naive_drift %>% hilo()
+```
+
+#### Answering questions to 2nd Benchmark Model
+
+Are the residuals homoscedastic? (That is, do they have constant variance?)
+
+Are the residuals normally distributed?
+
+Does it make sense to include these prediction intervals in your model evaluation? Why/why not?
+
+# Compare the Evaluation Results of the Two Models
