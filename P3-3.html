@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.37">
+<meta name="generator" content="quarto-1.8.25">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -12,9 +12,6 @@
 
 <title>TSAR Project Assignment Part 3 - Group 3</title>
 <style>
-/* Default styles provided by pandoc.
-** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
-*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -67,14 +64,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="P3-3_files/libs/clipboard/clipboard.min.js"></script>
 <script src="P3-3_files/libs/quarto-html/quarto.js" type="module"></script>
 <script src="P3-3_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="P3-3_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="P3-3_files/libs/quarto-html/popper.min.js"></script>
 <script src="P3-3_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="P3-3_files/libs/quarto-html/anchor.min.js"></script>
 <link href="P3-3_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="P3-3_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="P3-3_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="P3-3_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="P3-3_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="P3-3_files/libs/bootstrap/bootstrap-efbb37e9afcc02144ebbc7afd12a776f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="P3-3_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
@@ -176,16 +174,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mySeries)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>     Month              Series_ID         Title        Employed     
- Min.   :1939 Jan   Length   :969   Length   :969   Min.   : 556.0  
- 1st Qu.:1959 Mär   N.unique :  1   N.unique :  1   1st Qu.: 676.0  
- Median :1979 Mai   N.blank  :  0   N.blank  :  0   Median : 765.0  
- Mean   :1979 Mai   Min.nchar: 13   Min.nchar: 18   Mean   : 793.8  
- 3rd Qu.:1999 Jul   Max.nchar: 13   Max.nchar: 18   3rd Qu.: 899.0  
- Max.   :2019 Sep                                   Max.   :1260.0  </code></pre>
+<pre><code>     Month           Series_ID            Title              Employed     
+ Min.   :1939 Jan   Length:969         Length:969         Min.   : 556.0  
+ 1st Qu.:1959 Mär   Class :character   Class :character   1st Qu.: 676.0  
+ Median :1979 Mai   Mode  :character   Mode  :character   Median : 765.0  
+ Mean   :1979 Mai                                         Mean   : 793.8  
+ 3rd Qu.:1999 Jul                                         3rd Qu.: 899.0  
+ Max.   :2019 Sep                                         Max.   :1260.0  </code></pre>
 </div>
 </div>
 </section>
+<section id="model-1-mean-method" class="level1">
+<h1>Model 1: Mean Method</h1>
 <section id="step-1-extracting-the-training-set" class="level2">
 <h2 class="anchored" data-anchor-id="step-1-extracting-the-training-set">Step 1: Extracting the Training Set</h2>
 <div class="cell">
@@ -293,7 +293,112 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="task-d" class="level3">
 <h3 class="anchored" data-anchor-id="task-d">Task D</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">augment</span>(mean_employment_fit) <span class="sc">%&gt;%</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">features</span>(.innov, box_pierce, <span class="at">lag=</span><span class="dv">24</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 4
+  Series_ID     .model bp_stat bp_pvalue
+  &lt;chr&gt;         &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 CEU1000000001 Mean    13935.         0</code></pre>
+</div>
+</div>
+<section id="answering-questions-to-1st-benchmark-model-3" class="level4">
+<h4 class="anchored" data-anchor-id="answering-questions-to-1st-benchmark-model-3">Answering questions to 1st Benchmark Model</h4>
+<p>Does the test result support your conclusions from (c)?</p>
+<p>How do you conclude that from the test result?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the mean of the residuals of the fitted model</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>residual_mean <span class="ot">&lt;-</span> <span class="fu">mean</span>(</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">augment</span>(mean_employment_fit)<span class="sc">$</span>.resid, </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>residual_mean</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -3.226362e-14</code></pre>
+</div>
+</div>
+<p>Does the result support your conclusions from (c)?</p>
 </section>
+</section>
+</section>
+<section id="step-4-evaluate-the-point-forecast-accuracy-of-your-1st-benchmark-model" class="level2">
+<h2 class="anchored" data-anchor-id="step-4-evaluate-the-point-forecast-accuracy-of-your-1st-benchmark-model">Step 4: Evaluate the Point Forecast Accuracy of your 1st Benchmark Model</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Make a forecast and save the result</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>fc_mean <span class="ot">&lt;-</span> mean_employment_fit <span class="sc">%&gt;%</span> </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">forecast</span>(<span class="at">h =</span> (<span class="fu">nrow</span>(mySeries) <span class="sc">-</span> <span class="fu">nrow</span>(train)))</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a time plot 'Actual vs. Forecast'</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>fc_mean <span class="sc">%&gt;%</span> </span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autoplot</span>(mySeries) <span class="sc">+</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title=</span><span class="st">"US Employment in Mining and Logging - Actual vs. Forecast (Mean Model)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="P3-3_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the forecast accuracy metrics</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>fc_mean <span class="sc">%&gt;%</span> </span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">accuracy</span>(mySeries)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 11
+  .model Series_ID     .type    ME  RMSE   MAE   MPE  MAPE  MASE RMSSE  ACF1
+  &lt;chr&gt;  &lt;chr&gt;         &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 Mean   CEU1000000001 Test  -74.0  116.  98.8 -11.7  14.6  2.27  1.70 0.987</code></pre>
+</div>
+</div>
+<section id="answering-questions-to-1st-benchmark-model-4" class="level4">
+<h4 class="anchored" data-anchor-id="answering-questions-to-1st-benchmark-model-4">Answering questions to 1st Benchmark Model</h4>
+<p>Interpret the <strong>RMSE</strong> (Root Mean Squared Error) in max. 3 sentences:</p>
+<p>Interpret the <strong>MAPE</strong> (Mean Absolute Percentage Error) in max. 3 sentences:</p>
+</section>
+</section>
+<section id="step-5-evaluate-the-point-forecast-uncertainty-of-your-1st-benchmark-model" class="level2">
+<h2 class="anchored" data-anchor-id="step-5-evaluate-the-point-forecast-uncertainty-of-your-1st-benchmark-model">Step 5: Evaluate the Point Forecast Uncertainty of Your 1st Benchmark Model</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Residual diagnostics for checking homoscedasticity and normality</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>mean_employment_fit <span class="sc">%&gt;%</span> <span class="fu">gg_tsresiduals</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="P3-3_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Display prediction interval boundaries</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>fc_mean <span class="sc">%&gt;%</span> </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">hilo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tsibble: 194 x 7 [1M]
+# Key:       Series_ID, .model [1]
+   Series_ID     .model    Month
+   &lt;chr&gt;         &lt;chr&gt;     &lt;mth&gt;
+ 1 CEU1000000001 Mean   2003 Aug
+ 2 CEU1000000001 Mean   2003 Sep
+ 3 CEU1000000001 Mean   2003 Okt
+ 4 CEU1000000001 Mean   2003 Nov
+ 5 CEU1000000001 Mean   2003 Dez
+ 6 CEU1000000001 Mean   2004 Jan
+ 7 CEU1000000001 Mean   2004 Feb
+ 8 CEU1000000001 Mean   2004 Mär
+ 9 CEU1000000001 Mean   2004 Apr
+10 CEU1000000001 Mean   2004 Mai
+# ℹ 184 more rows
+# ℹ 4 more variables: Employed &lt;dist&gt;, .mean &lt;dbl&gt;, `80%` &lt;hilo&gt;, `95%` &lt;hilo&gt;</code></pre>
+</div>
+</div>
+<section id="answering-questions-to-1st-benchmark-model-5" class="level4">
+<h4 class="anchored" data-anchor-id="answering-questions-to-1st-benchmark-model-5">Answering questions to 1st Benchmark Model</h4>
+<p>Are the residuals homoscedastic? (That is, do they have constant variance?)</p>
+<p>Are the residuals normally distributed?</p>
+<p>Does it make sense to include these prediction intervals in your model evaluation? Why/why not?</p>
+</section>
+</section>
+</section>
+<section id="model-2-seasonal-naive-method-with-drift" class="level1">
+<h1>Model 2: Seasonal naive method with drift</h1>
 </section>
 
 </main>

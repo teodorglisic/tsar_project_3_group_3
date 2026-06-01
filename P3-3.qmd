@@ -47,6 +47,8 @@ str(mySeries)
 summary(mySeries)
 ```
 
+# Model 1: Mean Method
+
 ## Step 1: Extracting the Training Set
 
 ```{r}
@@ -125,5 +127,65 @@ What do these results tell you about your model?
 
 ```{r}
 augment(mean_employment_fit) %>% 
-  features(.innov, box_pierce, lag=10)
+  features(.innov, box_pierce, lag=24)
 ```
+
+#### Answering questions to 1st Benchmark Model
+
+Does the test result support your conclusions from (c)?
+
+How do you conclude that from the test result?
+
+```{r}
+# Calculate the mean of the residuals of the fitted model
+residual_mean <- mean(
+  augment(mean_employment_fit)$.resid, 
+  na.rm = TRUE)
+residual_mean
+```
+
+Does the result support your conclusions from (c)?
+
+## Step 4: Evaluate the Point Forecast Accuracy of your 1st Benchmark Model
+
+```{r}
+# Make a forecast and save the result
+fc_mean <- mean_employment_fit %>% 
+  forecast(h = (nrow(mySeries) - nrow(train)))
+
+# Create a time plot 'Actual vs. Forecast'
+fc_mean %>% 
+  autoplot(mySeries) +
+  labs(title="US Employment in Mining and Logging - Actual vs. Forecast (Mean Model)")
+
+# Calculate the forecast accuracy metrics
+fc_mean %>% 
+  accuracy(mySeries)
+```
+
+#### Answering questions to 1st Benchmark Model
+
+Interpret the **RMSE** (Root Mean Squared Error) in max. 3 sentences:
+
+Interpret the **MAPE** (Mean Absolute Percentage Error) in max. 3 sentences:
+
+## Step 5: Evaluate the Point Forecast Uncertainty of Your 1st Benchmark Model
+
+```{r}
+# Residual diagnostics for checking homoscedasticity and normality
+mean_employment_fit %>% gg_tsresiduals()
+
+# Display prediction interval boundaries
+fc_mean %>% 
+  hilo()
+```
+
+#### Answering questions to 1st Benchmark Model
+
+Are the residuals homoscedastic? (That is, do they have constant variance?)
+
+Are the residuals normally distributed?
+
+Does it make sense to include these prediction intervals in your model evaluation? Why/why not?
+
+# Model 2: Seasonal naive method with drift
