@@ -92,25 +92,30 @@ augment(mean_employment_fit)
 ### Task A
 
 ```{r}
-# Plot fitted values (predictions on training set) against actual values over time
+# Plot fitted values (predictions on training set) 
+# against actual values over time
 augment(mean_employment_fit) %>% 
   autoplot(.fitted, colour="blue", linetype="dashed") +
   autolayer(train, Employed) +
-  labs(y= "US Employment", title="Fitted and true values for monthly US employment rates (Mean method)")
+  labs(y= "US Employment", 
+       title="Fitted and true values for 
+       monthly US employment rates (Mean method)"
+       )
 ```
 
 #### Answering questions to 1st Benchmark Model
 
-Are the fitted values close to the actual values?
+*Are the fitted values close to the actual values?* No, the fitted values are not close to the actual values. They form a flat horizontal line at the historical average of the training data (approximately 808.6 thousand employees), completely failing to capture the cyclical, seasonal, and trending fluctuations of the true data.
 
-Are they systematically too high or too low?
+*Are they systematically too high or too low?* They are not systematically too high or too low overall (since the errors average out to zero over the training set), but they are systematically too low during cyclical peaks (e.g., the late 1970s and 1980s) and systematically too high during cyclical troughs (e.g., the 1940s and early 2000s).
 
-If yes, where does it come from? (Consider how your benchmark model works!)
+*If yes, where does it come from? (Consider how your benchmark model works!)* This behavior is a direct result of how the Mean method operates: it calculates a single constant value (the arithmetic mean of the entire history) and projects it across all time periods, ignoring any temporal dependencies, trends, or seasonality.
 
 ### Task B
 
 ```{r}
-# Create a scatter plot of actual values vs. fitted values with an identity line (slope=1)
+# Create a scatter plot of actual values
+# vs. fitted values with an identity line (slope=1)
 augment(mean_employment_fit) %>%
   ggplot(aes(x=Employed, y=.fitted)) + 
   geom_point() + 
@@ -121,40 +126,42 @@ augment(mean_employment_fit) %>%
 
 #### Answering questions to 1st Benchmark Model
 
-Are the points close to the identity line?
+*Are the points close to the identity line?* No, the points do not align with the identity line. Instead, they form a vertical column of points because the fitted values are constant at the mean (808.6), while the actual values vary widely between 556 and 1260 thousand.
 
-Are they systematically too high or too low?
+*Are they systematically too high or too low?* They are systematically too high for lower actual values (actual values below 808.6) and systematically too low for higher actual values (actual values above 808.6).
 
-If yes, where does it come from? (Relate your answer to what you saw in the time plot.)
+*If yes, where does it come from? (Relate your answer to what you saw in the time plot.)* This comes directly from the flat-line nature of the Mean model observed in the time plot: the model predicts the exact same average value regardless of whether the actual employment was historically at a cyclical low or a cyclical high.
 
 ### Task C
 
 ```{r}
-# Generate diagnostic plots for the model residuals (time plot, ACF plot, histogram)
+# Generate diagnostic plots for the 
+# model residuals (time plot, ACF plot, histogram)
 mean_employment_fit %>% gg_tsresiduals()
 ```
 
 #### Answering questions to 1st Benchmark Model
 
-Are the residuals auto-correlated? How do you decide that based on the plots?
+*Are the residuals auto-correlated? How do you decide that based on the plots?* Yes, the residuals are highly auto-correlated. This is evident from the ACF plot of the residuals, which shows large, positive spikes at almost all lags that far exceed the blue dashed significance boundaries, as well as the strong, slow-moving cyclical waves visible in the residuals time plot.
 
-Do the residuals have zero mean? How do you decide that based on the plots?
+*Do the residuals have zero mean? How do you decide that based on the plots?* Yes, the residuals have a mean of zero. This is visible in the residuals time plot, where the fluctuations are centered around the zero line, and in the residuals histogram, where the distribution is centered at zero.
 
-What do these results tell you about your model?
+*What do these results tell you about your model?* These results indicate that the Mean model is unbiased (zero mean), but it is extremely inadequate because it fails to capture any of the systematic temporal patterns (trends, cycles, and seasonality) present in the data, leaving all this predictable information in the residuals.
 
 ### Task D
 
 ```{r}
-# Perform a Ljung-Box test for residual autocorrelation with 24 lags (2 * seasonal period)
+# Perform a Ljung-Box test for residual autocorrelation
+# with 24 lags (2 * seasonal period)
 augment(mean_employment_fit) %>% 
   features(.innov, ljung_box, lag=24)
 ```
 
 #### Answering questions to 1st Benchmark Model
 
-Does the test result support your conclusions from (c)?
+*Does the test result support your conclusions from (c)?* Yes, the Ljung-Box test result strongly supports the conclusion that the residuals are auto-correlated.
 
-How do you conclude that from the test result?
+*How do you conclude that from the test result?* The p-value of the Ljung-Box test is exactly $0$ (which is less than the standard significance level of $0.05$). This leads us to reject the null hypothesis ($H_0$: residuals are white noise/uncorrelated) in favor of the alternative hypothesis ($H_1$: residuals are autocorrelated).
 
 ```{r}
 # Calculate the mean of the residuals of the fitted model
@@ -166,7 +173,7 @@ residual_mean
 
 #### Answering questions to 1st Benchmark Model
 
-Does the result support your conclusions from (c)?
+*Does the result support your conclusions from (c)?* Yes, the calculated residual mean is approximately $-3.23 \times 10^{-14}$ (which is mathematically zero, subject to minor computer floating-point limitations), supporting the conclusion that the residuals have a zero mean and the model is unbiased on the training set.
 
 ## Step 4: Evaluate the Point Forecast Accuracy of your 1st Benchmark Model
 
@@ -178,7 +185,8 @@ fc_mean <- mean_employment_fit %>%
 # Create a time plot 'Actual vs. Forecast'
 fc_mean %>% 
   autoplot(mySeries) +
-  labs(title="US Employment in Mining and Logging - Actual vs. Forecast (Mean Model)")
+  labs(title="US Employment in Mining and 
+       Logging - Actual vs. Forecast (Mean Model)")
 
 # Calculate the forecast accuracy metrics
 fc_mean %>% 
@@ -187,9 +195,9 @@ fc_mean %>%
 
 #### Answering questions to 1st Benchmark Model
 
-Interpret the **RMSE** (Root Mean Squared Error) in max. 3 sentences:
+*Interpret the **RMSE** (Root Mean Squared Error) in max. 3 sentences:* The RMSE on the test set is 116.3, which represents the standard deviation of the forecast errors. Since employment is measured in thousands, this means the model's point forecasts deviate from the true values by an average of 116.3 thousand employees on the test set. Because the RMSE is scale-dependent, it must be evaluated by a domain expert relative to the overall employment level (ranging between 584 and 754 thousand in the test set), indicating a moderately large prediction error.
 
-Interpret the **MAPE** (Mean Absolute Percentage Error) in max. 3 sentences:
+*Interpret the **MAPE** (Mean Absolute Percentage Error) in max. 3 sentences:* The MAPE on the test set is 14.6%, which measures the average size of the forecast errors relative to the actual levels as a percentage. This means that, on average, the Mean model's point forecasts are off by 14.6% of the true employment level. This scale-independent metric confirms that the model's accuracy is relatively poor, as a 14.6% average error is quite high for macro-employment data.
 
 ## Step 5: Evaluate the Point Forecast Uncertainty of Your 1st Benchmark Model
 
@@ -204,11 +212,11 @@ fc_mean %>%
 
 #### Answering questions to 1st Benchmark Model
 
-Are the residuals homoscedastic? (That is, do they have constant variance?)
+*Are the residuals homoscedastic? (That is, do they have constant variance?)* No, the residuals are heteroscedastic. The residual time plot shows that the variance (vertical spread) of the residuals is not constant, with much larger fluctuations in the middle of the training set (1970s–1990s) than at the beginning (1940s) or end.
 
-Are the residuals normally distributed?
+*Are the residuals normally distributed?* No, the residuals are not normally distributed. The histogram shows a multi-modal, non-symmetric distribution with multiple peaks that does not resemble a classic bell curve.
 
-Does it make sense to include these prediction intervals in your model evaluation? Why/why not?
+*Does it make sense to include these prediction intervals in your model evaluation? Why/why not?* No, it does not make sense to include these prediction intervals. The analytical calculation of prediction intervals relies on the assumptions that the residuals are uncorrelated, homoscedastic, and normally distributed; since all three assumptions are severely violated here, the intervals are distorted and highly unreliable.
 
 # Model 2: Seasonal naive method with drift
 
@@ -242,16 +250,20 @@ augment(naive_drift_employment_fit)
 augment(naive_drift_employment_fit) %>% 
   autoplot(.fitted, colour="red", linetype="dashed") +
   autolayer(train, Employed) +
-  labs(y= "US Employment", title="Fitted and true values for monthly US employment rates (Seasonal Naive with Drift method)")
+  labs(y= "US Employment", 
+       title="Fitted and true values for 
+       monthly US employment rates 
+       (Seasonal Naive with Drift method)"
+       )
 ```
 
 #### Answering questions to 2nd Benchmark Model
 
-Are the fitted values close to the actual values?
+*Are the fitted values close to the actual values?* Yes, the fitted values are much closer to the actual values compared to the Mean model. They successfully track the strong seasonal monthly fluctuations and the long-term downward trend present in the training set.
 
-Are they systematically too high or too low?
+*Are they systematically too high or too low?* They are not systematically too high or too low overall, but they lag behind by one year (12 months) during sudden turns or trend changes in the data.
 
-If yes, where does it come from? (Consider how your benchmark model works!)
+*If yes, where does it come from? (Consider how your benchmark model works!)* This close tracking comes from the design of the Seasonal Naïve with Drift model: it sets the 1-step fitted value to the value from the same month of the previous year plus the average monthly trend (drift). The slight lag at turning points happens because the model relies entirely on historical values from 12 months ago to predict today's value.
 
 ### Task B
 
@@ -261,36 +273,42 @@ augment(naive_drift_employment_fit) %>%
   ggplot(aes(x=Employed, y=.fitted)) + 
   geom_point() +
   geom_abline(slope = 1, intercept = 0, linetype=2) +
-  labs(title = "Actual vs. Fitted (Seasonal Naive with Drift Model)", x="Actual", y="Fitted")
+  labs(title = "Actual vs. Fitted 
+       (Seasonal Naive with Drift Model)", 
+       x="Actual",
+       y="Fitted"
+       )
 ```
 
 #### Answering questions to 2nd Benchmark Model
 
-Are the points close to the identity line?
+*Are the points close to the identity line?* Yes, the points are clustered relatively closely along the dashed identity line ($y=x$), showing a massive improvement in fit over the Mean model.
 
-Are they systematically too high or too low?
+*Are they systematically too high or too low?* There is no significant systematic bias, as the points are distributed fairly evenly on both sides of the identity line.
 
-If yes, where does it come from? (Relate your answer to what you saw in the time plot.)
+*If yes, where does it come from? (Relate your answer to what you saw in the time plot.)* This tight alignment around the identity line reflects the model's ability to successfully capture the seasonal level and trend of the training series over time, keeping the fitted values close to the actual values.
 
 ### Task C
 
 ```{r}
-# View residual diagnostic plots (time plot, ACF plot, histogram) to assess model fit
+# View residual diagnostic plots (time plot, ACF plot, histogram)
+# to assess model fit
 naive_drift_employment_fit %>% gg_tsresiduals()
 ```
 
 #### Answering questions to 2nd Benchmark Model
 
-Are the residuals auto-correlated? How do you decide that based on the plots?
+*Are the residuals auto-correlated? How do you decide that based on the plots?* Yes, the residuals are still auto-correlated. Although much smaller than in the Mean model, the ACF plot shows significant positive spikes at lag 1 and lag 12 (as well as multiples of 12), showing that some short-term and seasonal dependencies have not been fully captured.
 
-Do the residuals have zero mean? How do you decide that based on the plots?
+*Do the residuals have zero mean? How do you decide that based on the plots?* Yes, the residuals have a mean of zero. The residuals time plot is centered around the zero line, and the histogram distribution peaks exactly at zero.
 
-What do these results tell you about your model?
+*What do these results tell you about your model?* These results tell us that while the Seasonal Naïve with Drift model is unbiased and fits the training data well, it is still not a perfect model because it leaves significant autocorrelation in the residuals, indicating that a more advanced model (like ETS or ARIMA) could capture the remaining patterns.
 
 ### Task D
 
 ```{r}
-# Conduct a formal Ljung-Box test for autocorrelation in the residuals (lag = 2 * seasonal period)
+# Conduct a formal Ljung-Box test for autocorrelation 
+# in the residuals (lag = 2 * seasonal period)
 augment(naive_drift_employment_fit) %>% 
   features(
   .innov,
@@ -301,9 +319,9 @@ augment(naive_drift_employment_fit) %>%
 
 #### Answering questions to 2nd Benchmark Model
 
-Does the test result support your conclusions from (c)?
+*Does the test result support your conclusions from (c)?* Yes, the Ljung-Box test result supports the conclusion that the residuals are auto-correlated.
 
-How do you conclude that from the test result?
+*How do you conclude that from the test result?* The p-value of the test is exactly $0$ (which is less than $0.05$). This leads us to reject the null hypothesis of white noise and conclude that there is statistically significant autocorrelation left in the residuals.
 
 ```{r}
 # Calculate the mean of the residuals to check for forecast bias
@@ -315,7 +333,7 @@ residual_mean_naive_drift
 
 #### Answering questions to 2nd Benchmark Model
 
-Does the result support your conclusions from (c)?
+*Does the result support your conclusions from (c)?* Yes, the calculated residual mean is approximately $-4.17 \times 10^{-14}$ (which is practically zero), supporting the conclusion that the model is unbiased on the training set.
 
 ## Step 4: Evaluate the Point Forecast Accuracy of your 2nd Benchmark Model
 
@@ -324,20 +342,24 @@ Does the result support your conclusions from (c)?
 fc_naive_drift <- naive_drift_employment_fit %>% 
   forecast(h=(overall_count - training_row_count))
 
-# Plot the forecast values with prediction intervals against the actual complete dataset
+# Plot the forecast values with prediction 
+# intervals against the actual complete dataset
 fc_naive_drift %>% 
   autoplot(mySeries) +
-  labs(title="US Employment in Mining and Logging - Actual vs. Forecast (Seasonal Naive with Drift Model)")
+  labs(title="US Employment in Mining and Logging 
+       - Actual vs. Forecast (Seasonal Naive with Drift Model)"
+       )
 
-# Calculate point forecast accuracy metrics (MAE, RMSE, MAPE, MASE) on the test set
+# Calculate point forecast accuracy metrics 
+# (MAE, RMSE, MAPE, MASE) on the test set
 fc_naive_drift %>% accuracy(mySeries)
 ```
 
 #### Answering questions to 2nd Benchmark Model
 
-Interpret the **RMSE** (Root Mean Squared Error) in max. 3 sentences:
+*Interpret the **RMSE** (Root Mean Squared Error) in max. 3 sentences:* The RMSE on the test set is 223.2, which means the standard deviation of the forecast errors is 223.2 thousand employees. This is nearly double the RMSE of the Mean model (116.3), indicating very poor point forecast performance on the test set. This large error is caused by the model projecting a continuous downward trend while the actual test data turned and trended upwards.
 
-Interpret the **MAPE** (Mean Absolute Percentage Error) in max. 3 sentences:
+*Interpret the **MAPE** (Mean Absolute Percentage Error) in max. 3 sentences:* The MAPE on the test set is 25.9%, which means that the model's forecasts are, on average, off by 25.9% of the actual employment level. This high percentage error shows that the model performs poorly on the test set, failing to compete with the simpler Mean model (which has a MAPE of 14.6%). This scale-independent metric highlights the risk of extrapolating a historical trend that does not persist into the future.
 
 ## Step 5: Evaluate the Point Forecast Uncertainty of Your 2nd Benchmark Model
 
@@ -345,16 +367,19 @@ Interpret the **MAPE** (Mean Absolute Percentage Error) in max. 3 sentences:
 # Perform residual diagnostics to assess homoscedasticity and normality
 naive_drift_employment_fit %>% gg_tsresiduals()
 
-# Extract the upper and lower boundaries for 80% and 95% prediction intervals
+# Extract the upper and lower boundaries for 
+# 80% and 95% prediction intervals
 fc_naive_drift %>% hilo()
 ```
 
 #### Answering questions to 2nd Benchmark Model
 
-Are the residuals homoscedastic? (That is, do they have constant variance?)
+*Are the residuals homoscedastic? (That is, do they have constant variance?)* No, the residuals are heteroscedastic. The residual time plot shows that the variance changes across the training set, with fluctuations being noticeably wider in the middle of the series than at the start.
 
-Are the residuals normally distributed?
+*Are the residuals normally distributed?* No, the residuals are not normally distributed. The histogram is asymmetric, skewed, and exhibits multiple peaks, failing to show a normal bell shape.
 
-Does it make sense to include these prediction intervals in your model evaluation? Why/why not?
+*Does it make sense to include these prediction intervals in your model evaluation? Why/why not?* No, it does not make sense. Because the residuals violate the assumptions of normality, homoscedasticity, and independence, the calculated prediction intervals are highly unreliable and likely distorted.
 
 # Compare the Evaluation Results of the Two Models
+
+Although the Seasonal Naïve with Drift model provides a dramatically better fit on the training data (as it successfully tracks seasonal cycles and the training trend), it performs significantly worse on the test set than the simple Mean model. The Mean model achieves a test RMSE of 116.3 and a MAPE of 14.6%, whereas the Seasonal Naïve with Drift model has an RMSE of 223.2 and a MAPE of 25.9%. This discrepancy is due to a structural break: the training set (Jan 1939 to Jul 2003) exhibits a long-term downward trend, which the drift model projects into the future, whereas the actual test set (Aug 2003 to Sep 2019) reverses and trends upward. Therefore, the Mean model is the better forecasting model for this specific test set, though neither model is ideal since both leave significant autocorrelation in their residuals.
